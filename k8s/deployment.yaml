@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chapchu-auth
+  namespace: chapchu
+  labels:
+    app: chapchu-auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chapchu-auth
+  template:
+    metadata:
+      labels:
+        app: chapchu-auth
+    spec:
+      containers:
+        - name: chapchu-auth
+          # 로컬에서 build & push 후 태그를 갱신하라. (예: ghcr.io/chapchu-trip-platform/chapchu-auth:<tag>)
+          image: ghcr.io/chapchu-trip-platform/chapchu-auth:latest
+          ports:
+            - containerPort: 9000
+          envFrom:
+            - configMapRef:
+                name: chapchu-auth-config
+            - secretRef:
+                name: chapchu-auth-secret
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 9000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 9000
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "384Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

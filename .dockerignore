@@ -1,0 +1,7 @@
+build/
+.gradle/
+.git/
+.idea/
+*.md
+k8s/
+infra/

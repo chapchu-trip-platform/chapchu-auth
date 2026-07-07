@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:test
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-client-id
+            client-secret: test-client-secret
+            scope: openid,profile,email
+
+chapchu-auth:
+  issuer-uri: http://localhost:9000
+  client:
+    front-redirect-uri: http://localhost:3000/login/callback
+  jwt:
+    rsa-private-key:
+    rsa-public-key:

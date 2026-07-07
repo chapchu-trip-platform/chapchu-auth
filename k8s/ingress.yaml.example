@@ -1,0 +1,20 @@
+# 도메인이 생긴 뒤 사용. k3s는 기본으로 Traefik ingress controller가 떠 있다.
+# 사용법: 이 파일을 ingress.yaml로 복사하고 host를 채운 뒤 service.yaml의 type을 ClusterIP로 바꿔서 함께 적용하라.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: chapchu-auth
+  namespace: chapchu
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: auth.REPLACE_ME.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: chapchu-auth
+                port:
+                  number: 9000

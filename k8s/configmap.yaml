@@ -1,0 +1,10 @@
+# 시크릿이 아닌 설정값. EC2 퍼블릭 IP/도메인이 정해지면 AUTH_SERVER_URL, FRONT_REDIRECT_URI를 채워서 적용하라.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chapchu-auth-config
+  namespace: chapchu
+data:
+  # chapchu-api의 spring.security.oauth2.resourceserver.jwt.issuer-uri와 반드시 동일한 값이어야 한다.
+  AUTH_SERVER_URL: "http://<EC2_PUBLIC_IP_OR_DOMAIN>:9000"
+  FRONT_REDIRECT_URI: "http://<FRONT_DOMAIN>/login/callback"
