@@ -11,7 +11,7 @@ RUN chmod +x gradlew && ./gradlew bootJar --no-daemon -x test
 FROM eclipse-temurin:25-jre AS runtime
 WORKDIR /app
 
-RUN useradd --system --uid 1000 chapchu
+RUN useradd --system chapchu
 COPY --from=build /workspace/build/libs/*.jar app.jar
 USER chapchu
 
