@@ -38,6 +38,7 @@ chapchu-auth:
 
 server:
   port: 9000
+  forward-headers-strategy: FRAMEWORK
 
 management:
   endpoints:

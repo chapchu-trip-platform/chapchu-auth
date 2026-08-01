@@ -4,5 +4,5 @@ metadata:
   name: chapchu-auth-config
   namespace: chapchu
 data:
-  AUTH_SERVER_URL: "http://auth.chapchu.site"
+  AUTH_SERVER_URL: "https://auth.chapchu.site"
   FRONT_REDIRECT_URI: "http://localhost:3000/login/callback"
