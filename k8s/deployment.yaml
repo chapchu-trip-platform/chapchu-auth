@@ -15,6 +15,8 @@ spec:
       labels:
         app: chapchu-auth
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: chapchu-auth
           # 로컬에서 build & push 후 태그를 갱신하라. (예: ghcr.io/chapchu-trip-platform/chapchu-auth:<tag>)
