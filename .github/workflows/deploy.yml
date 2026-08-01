@@ -73,6 +73,13 @@ jobs:
           command_timeout: 5m
           script: |
             export KUBECONFIG=/home/ubuntu/.kube/config
-            kubectl apply -f ~/k8s/chapchu-auth/k8s/
+            # 시크릿은 위 "Apply k8s secrets" 스텝에서만 관리한다.
+            # 디렉터리 전체(-f k8s/) 적용은 예시 매니페스트가 실제 시크릿을 REPLACE_ME 로 덮어쓰므로 금지.
+            # 이전 배포로 서버에 남아있을 수 있는 stale 예시 파일 정리.
+            rm -f ~/k8s/chapchu-auth/k8s/secret.example.yaml
+            kubectl apply -f ~/k8s/chapchu-auth/k8s/namespace.yaml
+            kubectl apply -f ~/k8s/chapchu-auth/k8s/configmap.yaml
+            kubectl apply -f ~/k8s/chapchu-auth/k8s/service.yaml
+            kubectl apply -f ~/k8s/chapchu-auth/k8s/deployment.yaml
             kubectl rollout restart deployment/chapchu-auth -n chapchu
             kubectl rollout status deployment/chapchu-auth -n chapchu --timeout=4m
