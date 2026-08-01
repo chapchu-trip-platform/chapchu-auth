@@ -25,6 +25,7 @@ spring:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
             scope: openid,profile,email
+            redirect-uri: "${GOOGLE_REDIRECT_URI:http://localhost:9000/login/oauth2/code/google}"
 
 # chapchu-api의 spring.security.oauth2.resourceserver.jwt.issuer-uri와 동일한 값을 가리켜야 한다.
 # (docs/decisions/008-auth-server-separation.md 참고)

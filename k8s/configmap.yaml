@@ -5,4 +5,5 @@ metadata:
   namespace: chapchu
 data:
   AUTH_SERVER_URL: "https://auth.chapchu.site"
+  GOOGLE_REDIRECT_URI: "https://auth.chapchu.site/login/oauth2/code/google"
   FRONT_REDIRECT_URI: "http://localhost:3000/login/callback"
