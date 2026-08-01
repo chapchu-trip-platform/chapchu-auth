@@ -5,4 +5,4 @@ metadata:
   namespace: chapchu
 data:
   AUTH_SERVER_URL: "http://auth.chapchu.site"
-  FRONT_REDIRECT_URI: "http://<FRONT_DOMAIN>/login/callback"
+  FRONT_REDIRECT_URI: "http://localhost:3000/login/callback"
