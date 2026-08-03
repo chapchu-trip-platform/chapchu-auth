@@ -20,7 +20,7 @@ public class DefaultSecurityConfig {
       HttpSecurity http, FederatedOidcUserService federatedOidcUserService) throws Exception {
     http.authorizeHttpRequests(
             auth ->
-                auth.requestMatchers("/actuator/health", "/actuator/health/**")
+                auth.requestMatchers("/actuator/health", "/actuator/health/**", "/docs/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated())

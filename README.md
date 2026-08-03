@@ -53,6 +53,20 @@ export FRONT_REDIRECT_URI=http://localhost:3000/login/callback
 ./gradlew spotlessApply check
 ```
 
+## API 문서
+
+로그인·회원등록 흐름과 각 엔드포인트 명세는 REST Docs로 관리한다 (`docs/decisions/005` 참고).
+
+- 배포본: https://auth.chapchu.site/docs/index.html
+- 로컬 생성: `./gradlew asciidoctorDocs` → `build/docs/asciidoc/index.html`
+- OpenAPI 3.0 JSON: `./gradlew openapi3` → `build/api-spec/openapi3.json`
+
+`bootJar`가 HTML을 `static/docs`로 넣으므로 서버를 띄우면 바로 열람할 수 있다.
+
+> **회원가입 API는 따로 없다.** 처음 로그인하는 구글 계정은 `AuthUserService.findOrCreate()`가
+> 그 자리에서 `users`에 등록한다. 이때 `nickname`은 비어 있으므로, 프론트는 로그인 직후
+> chapchu-api의 `GET /users/me`로 확인하고 비어 있으면 닉네임 등록 화면으로 보내야 한다.
+
 ## Docker
 
 ```bash

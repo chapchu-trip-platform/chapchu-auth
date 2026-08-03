@@ -3,6 +3,9 @@ plugins {
     id 'org.springframework.boot' version '3.4.5'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'com.diffplug.spotless' version '6.25.0'
+    id 'com.epages.restdocs-api-spec' version '0.19.4'
+    // org.asciidoctor.jvm.convert 는 Gradle 9 미지원 (chapchu-api docs/failures/004 참고).
+    // HTML 변환은 아래 asciidoctorDocs 태스크가 AsciidoctorJ 라이브러리를 직접 호출해 처리한다.
 }
 
 group = 'com.pettrip'
@@ -13,6 +16,15 @@ java {
 }
 
 repositories { mavenCentral() }
+
+ext {
+    snippetsDir = file("build/generated-snippets")
+    docsDir     = file("build/docs/asciidoc")
+}
+
+configurations {
+    asciidoctor
+}
 
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs << '-parameters'
@@ -28,8 +40,13 @@ dependencies {
     implementation 'com.github.f4b6a3:uuid-creator:5.3.7'
     runtimeOnly 'org.postgresql:postgresql'
 
+    asciidoctor 'org.asciidoctor:asciidoctorj:3.0.0'
+    asciidoctor 'org.asciidoctor:asciidoctorj-cli:3.0.0'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+    testImplementation 'com.epages:restdocs-api-spec-mockmvc:0.19.4'
     // mockito-core BOM 기본값의 byte-buddy가 Java 25 클래스 파일을 지원하지 않음 (chapchu-api docs/failures/006 참고)
     testImplementation 'org.mockito:mockito-core:5.21.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.21.0'
@@ -56,4 +73,45 @@ spotless {
 
 tasks.named('test') {
     useJUnitPlatform()
+    outputs.dir snippetsDir
+}
+
+// chapchu-api와 동일하게 REST Docs 스니펫에서 OpenAPI 3.0 JSON을 뽑는다.
+openapi3 {
+    server = 'https://auth.chapchu.site'
+    title = 'PetTrip Auth API'
+    description = 'PetTrip 인증 서버. Google 로그인 위임 + 자체 JWT 발급 (OAuth2 Authorization Code + PKCE).'
+    version = '1.0.0'
+    format = 'json'
+    outputDirectory = 'build/api-spec'
+}
+
+// AsciidoctorJ를 JavaExec로 띄워 index.adoc -> index.html 로 변환한다.
+// 별도 프로세스로 격리해야 Gradle 데몬(Java 25)과 JRuby의 호환 문제를 피할 수 있다.
+tasks.register('asciidoctorDocs', JavaExec) {
+    group = 'documentation'
+    description = 'REST Docs 스니펫을 묶어 index.html을 생성한다.'
+
+    dependsOn tasks.named('test')
+
+    inputs.dir file('src/docs/asciidoc')
+    inputs.dir snippetsDir
+    outputs.dir docsDir
+
+    classpath = configurations.asciidoctor
+    mainClass = 'org.asciidoctor.cli.jruby.AsciidoctorInvoker'
+    // JRuby가 JNI를 쓴다. Java 25에서 경고로 끝나지만 이후 릴리스에서는 차단되므로 미리 허용한다.
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
+    args = [
+            '-a', "snippets=${snippetsDir.absolutePath}",
+            '-D', docsDir.absolutePath,
+            file('src/docs/asciidoc/index.adoc').absolutePath,
+    ]
+}
+
+tasks.named('bootJar') {
+    dependsOn tasks.named('asciidoctorDocs')
+    from(docsDir) {
+        into 'BOOT-INF/classes/static/docs'
+    }
 }

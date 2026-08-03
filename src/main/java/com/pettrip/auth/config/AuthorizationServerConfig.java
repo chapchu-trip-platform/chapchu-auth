@@ -18,6 +18,8 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.authorization.InMemoryOAuth2AuthorizationService;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -76,6 +78,15 @@ public class AuthorizationServerConfig {
             .build();
 
     return new InMemoryRegisteredClientRepository(frontClient);
+  }
+
+  /**
+   * 인가 상태 저장소. 선언하지 않아도 Authorization Server가 내부적으로 동일한 구현을 쓰지만, 빈으로 노출해야 문서화 테스트에서 "로그인을 마친 상태"를
+   * 주입할 수 있다. 단일 인스턴스 배포라 in-memory로 충분하며, 다중 레플리카로 늘릴 때 JDBC 구현으로 교체해야 한다.
+   */
+  @Bean
+  public OAuth2AuthorizationService authorizationService() {
+    return new InMemoryOAuth2AuthorizationService();
   }
 
   @Bean
