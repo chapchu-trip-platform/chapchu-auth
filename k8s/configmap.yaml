@@ -6,4 +6,7 @@ metadata:
 data:
   AUTH_SERVER_URL: "https://auth.chapchu.site"
   GOOGLE_REDIRECT_URI: "https://auth.chapchu.site/login/oauth2/code/google"
+  # 쉼표로 구분해 여러 개 등록할 수 있다. 여기 없는 redirect_uri로 인가 요청이 오면
+  # 에러 없이 구글 로그인으로 넘어간 뒤 아무 데도 도달하지 못하므로, 쓰는 주소는 빠짐없이 넣어야 한다.
+  # 프론트를 배포하면 그 주소를 여기에 추가하라.
   FRONT_REDIRECT_URI: "http://localhost:3000/login/callback"

@@ -6,6 +6,8 @@ import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -51,16 +53,21 @@ public class AuthorizationServerConfig {
     return http.build();
   }
 
+  /**
+   * 프론트 콜백 URL은 쉼표로 구분해 여러 개 등록할 수 있다 (로컬 개발 주소 + 배포 주소 동시 운용).
+   *
+   * <p>등록되지 않은 {@code redirect_uri}로 인가 요청이 오면 <b>에러 없이</b> 구글 로그인으로 넘어간 뒤 아무 데도 도달하지 못한다. 원인을 알려주는
+   * 메시지가 없어 디버깅이 매우 어려우므로, 사용할 콜백 주소는 빠짐없이 등록해 두어야 한다.
+   */
   @Bean
   public RegisteredClientRepository registeredClientRepository(
-      @Value("${chapchu-auth.client.front-redirect-uri}") String frontRedirectUri) {
-    RegisteredClient frontClient =
+      @Value("${chapchu-auth.client.front-redirect-uri}") String frontRedirectUris) {
+    RegisteredClient.Builder frontClientBuilder =
         RegisteredClient.withId(UUID.randomUUID().toString())
             .clientId("chapchu-front")
             .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-            .redirectUri(frontRedirectUri)
             .scope(OidcScopes.OPENID)
             .scope(OidcScopes.PROFILE)
             .scope(OidcScopes.EMAIL)
@@ -74,10 +81,22 @@ public class AuthorizationServerConfig {
                     .accessTokenTimeToLive(Duration.ofMinutes(30))
                     .refreshTokenTimeToLive(Duration.ofDays(14))
                     .reuseRefreshTokens(false)
-                    .build())
-            .build();
+                    .build());
 
-    return new InMemoryRegisteredClientRepository(frontClient);
+    parseRedirectUris(frontRedirectUris).forEach(frontClientBuilder::redirectUri);
+
+    return new InMemoryRegisteredClientRepository(frontClientBuilder.build());
+  }
+
+  private static List<String> parseRedirectUris(String value) {
+    List<String> uris =
+        Arrays.stream(value.split(",")).map(String::trim).filter(uri -> !uri.isEmpty()).toList();
+
+    if (uris.isEmpty()) {
+      throw new IllegalStateException(
+          "chapchu-auth.client.front-redirect-uri 가 비어 있다. 최소 한 개의 콜백 URL을 등록해야 한다.");
+    }
+    return uris;
   }
 
   /**
