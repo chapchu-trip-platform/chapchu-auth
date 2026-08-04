@@ -26,7 +26,7 @@ PetTrip 인증 서버. Spring Authorization Server로 구현하며, Google OAuth
 | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | chapchu-api와 **동일한** Postgres (users 테이블 공유) |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google Cloud Console에서 발급한 OAuth 2.0 클라이언트 |
 | `AUTH_SERVER_URL` | 이 서버 자신의 issuer URL. 로컬은 `http://localhost:9000`. chapchu-api의 `issuer-uri`와 반드시 동일해야 함 |
-| `FRONT_REDIRECT_URI` | 프론트가 인가 코드를 받을 콜백 URL (기본값 `http://localhost:3000/login/callback`) |
+| `FRONT_REDIRECT_URI` | 프론트가 인가 코드를 받을 콜백 URL (기본값 `http://localhost:3000/login/callback`). **쉼표로 구분해 여러 개** 등록 가능 — 로컬 개발 주소와 배포 주소를 함께 넣으면 된다 |
 | `AUTH_RSA_PRIVATE_KEY`, `AUTH_RSA_PUBLIC_KEY` | (선택) JWT 서명용 고정 RSA 키. 비우면 매 재시작마다 새로 생성됨 — **로컬 개발에서만 비워두고 운영에서는 반드시 채울 것** |
 
 Google Cloud Console에서 OAuth 클라이언트 생성 시 **승인된 리디렉션 URI**에 아래를 등록해야 한다:
@@ -81,6 +81,7 @@ docker push ghcr.io/chapchu-trip-platform/chapchu-auth:latest
 3. `k8s/namespace.yaml` 적용
 4. `k8s/secret.example.yaml`을 복사해 `k8s/secret.yaml`을 만들고 실제 값 채운 뒤 적용 (커밋 금지, `.gitignore`에 포함됨)
 5. `k8s/configmap.yaml`의 `AUTH_SERVER_URL`/`FRONT_REDIRECT_URI`를 EC2 퍼블릭 IP(또는 도메인)로 채운 뒤 적용
+   - `FRONT_REDIRECT_URI`에 **실제로 쓰는 콜백 주소를 빠짐없이** 넣어라 (쉼표 구분). 등록되지 않은 주소로 인가 요청이 오면 에러 메시지 없이 구글 로그인만 거친 뒤 아무 데도 도달하지 못해 원인 파악이 어렵다
 6. `k8s/deployment.yaml`, `k8s/service.yaml` 적용
 
 ```bash
