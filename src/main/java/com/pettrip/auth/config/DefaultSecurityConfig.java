@@ -1,6 +1,7 @@
 package com.pettrip.auth.config;
 
 import com.pettrip.auth.oauth2.FederatedOidcUserService;
+import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -20,7 +21,9 @@ public class DefaultSecurityConfig {
       HttpSecurity http, FederatedOidcUserService federatedOidcUserService) throws Exception {
     http.authorizeHttpRequests(
             auth ->
-                auth.requestMatchers("/actuator/health", "/actuator/health/**", "/docs/**")
+                auth.dispatcherTypeMatchers(DispatcherType.ERROR, DispatcherType.FORWARD)
+                    .permitAll()
+                    .requestMatchers("/actuator/health", "/actuator/health/**", "/docs/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated())
