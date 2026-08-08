@@ -33,13 +33,18 @@ import org.springframework.security.oauth2.server.authorization.settings.TokenSe
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 public class AuthorizationServerConfig {
 
   @Bean
   @Order(1)
-  public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
+  public SecurityFilterChain authorizationServerSecurityFilterChain(
+      HttpSecurity http,
+      @Value("${chapchu-auth.client.front-redirect-uri}") String frontRedirectUris)
       throws Exception {
     OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
     http.getConfigurer(OAuth2AuthorizationServerConfigurer.class).oidc(Customizer.withDefaults());
@@ -50,7 +55,41 @@ public class AuthorizationServerConfig {
                 new LoginUrlAuthenticationEntryPoint("/login"),
                 new MediaTypeRequestMatcher(MediaType.TEXT_HTML)));
 
+    http.cors(cors -> cors.configurationSource(authServerCorsSource(frontRedirectUris)));
+
     return http.build();
+  }
+
+  private static CorsConfigurationSource authServerCorsSource(String frontRedirectUris) {
+    List<String> origins =
+        Arrays.stream(frontRedirectUris.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .map(
+                uri -> {
+                  try {
+                    java.net.URI parsed = java.net.URI.create(uri);
+                    return parsed.getScheme()
+                        + "://"
+                        + parsed.getHost()
+                        + (parsed.getPort() == -1 ? "" : ":" + parsed.getPort());
+                  } catch (Exception e) {
+                    return uri;
+                  }
+                })
+            .distinct()
+            .toList();
+
+    CorsConfiguration config = new CorsConfiguration();
+    config.setAllowedOrigins(origins);
+    config.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
+    config.setAllowedHeaders(List.of("*"));
+    config.setAllowCredentials(true);
+
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/oauth2/token", config);
+    source.registerCorsConfiguration("/.well-known/**", config);
+    return source;
   }
 
   /**

@@ -27,6 +27,9 @@ public class AuthUser {
   @Column(nullable = false, unique = true)
   private String email;
 
+  @Column(length = 30)
+  private String nickname;
+
   @Enumerated(EnumType.STRING)
   @Column(length = 20)
   private Role role;
@@ -37,9 +40,10 @@ public class AuthUser {
 
   protected AuthUser() {}
 
-  public AuthUser(String email, String googleUserId) {
+  public AuthUser(String email, String googleUserId, String nickname) {
     this.email = email;
     this.googleUserId = googleUserId;
+    this.nickname = nickname;
     this.role = Role.USER;
     this.accountStatus = AccountStatus.ACTIVE;
   }
@@ -58,6 +62,10 @@ public class AuthUser {
 
   public Role getRole() {
     return role;
+  }
+
+  public String getNickname() {
+    return nickname;
   }
 
   public AccountStatus getAccountStatus() {

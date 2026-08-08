@@ -15,7 +15,7 @@ class AuthUserRepositoryTest {
   @Test
   @DisplayName("google_user_id로 저장된 사용자를 조회한다")
   void savesAndFindsByGoogleUserId() {
-    authUserRepository.save(new AuthUser("user@example.com", "google-789"));
+    authUserRepository.save(new AuthUser("user@example.com", "google-789", "테스트닉"));
 
     var found = authUserRepository.findByGoogleUserId("google-789");
 

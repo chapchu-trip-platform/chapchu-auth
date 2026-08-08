@@ -1,6 +1,7 @@
 package com.pettrip.auth.config;
 
 import com.pettrip.auth.oauth2.FederatedOidcUserService;
+import com.pettrip.auth.oauth2.OnboardingAuthenticationFailureHandler;
 import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,19 +19,25 @@ public class DefaultSecurityConfig {
   @Bean
   @Order(2)
   public SecurityFilterChain defaultSecurityFilterChain(
-      HttpSecurity http, FederatedOidcUserService federatedOidcUserService) throws Exception {
+      HttpSecurity http,
+      FederatedOidcUserService federatedOidcUserService,
+      OnboardingAuthenticationFailureHandler onboardingFailureHandler)
+      throws Exception {
     http.authorizeHttpRequests(
             auth ->
                 auth.dispatcherTypeMatchers(DispatcherType.ERROR, DispatcherType.FORWARD)
                     .permitAll()
-                    .requestMatchers("/actuator/health", "/actuator/health/**", "/docs/**")
+                    .requestMatchers(
+                        "/actuator/health", "/actuator/health/**", "/docs/**", "/auth/register")
                     .permitAll()
                     .anyRequest()
                     .authenticated())
         .oauth2Login(
             login ->
-                login.userInfoEndpoint(
-                    userInfo -> userInfo.oidcUserService(federatedOidcUserService)));
+                login
+                    .userInfoEndpoint(
+                        userInfo -> userInfo.oidcUserService(federatedOidcUserService))
+                    .failureHandler(onboardingFailureHandler));
 
     return http.build();
   }
