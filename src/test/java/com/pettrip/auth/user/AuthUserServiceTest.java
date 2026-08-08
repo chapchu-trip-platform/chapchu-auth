@@ -19,30 +19,41 @@ class AuthUserServiceTest {
   @Mock private AuthUserRepository authUserRepository;
 
   @Test
-  @DisplayName("기존 google_user_id가 있으면 새로 생성하지 않고 그대로 반환한다")
+  @DisplayName("기존 google_user_id가 있으면 존재하는 유저를 반환한다")
   void returnsExistingUser() {
-    AuthUser existing = new AuthUser("user@example.com", "google-123");
+    AuthUser existing = new AuthUser("user@example.com", "google-123", "닉네임");
     when(authUserRepository.findByGoogleUserId("google-123")).thenReturn(Optional.of(existing));
 
     AuthUserService service = new AuthUserService(authUserRepository);
-    AuthUser result = service.findOrCreate("google-123", "user@example.com");
+    Optional<AuthUser> result = service.findByGoogleUserId("google-123");
 
-    assertThat(result).isSameAs(existing);
+    assertThat(result).contains(existing);
     verify(authUserRepository, never()).save(any());
   }
 
   @Test
-  @DisplayName("google_user_id가 없으면 새 사용자를 생성해 저장한다")
-  void createsNewUserWhenMissing() {
+  @DisplayName("google_user_id가 없으면 Optional.empty를 반환한다")
+  void returnsEmptyWhenMissing() {
     when(authUserRepository.findByGoogleUserId("google-456")).thenReturn(Optional.empty());
+
+    AuthUserService service = new AuthUserService(authUserRepository);
+    Optional<AuthUser> result = service.findByGoogleUserId("google-456");
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  @DisplayName("createWithNickname은 닉네임을 포함한 새 유저를 저장한다")
+  void createsNewUserWithNickname() {
     when(authUserRepository.save(any(AuthUser.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     AuthUserService service = new AuthUserService(authUserRepository);
-    AuthUser result = service.findOrCreate("google-456", "new@example.com");
+    AuthUser result = service.createWithNickname("google-789", "new@example.com", "짱구");
 
-    assertThat(result.getGoogleUserId()).isEqualTo("google-456");
+    assertThat(result.getGoogleUserId()).isEqualTo("google-789");
     assertThat(result.getEmail()).isEqualTo("new@example.com");
+    assertThat(result.getNickname()).isEqualTo("짱구");
     assertThat(result.getRole()).isEqualTo(Role.USER);
     assertThat(result.getAccountStatus()).isEqualTo(AccountStatus.ACTIVE);
   }
