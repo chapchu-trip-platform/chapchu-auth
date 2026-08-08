@@ -37,7 +37,7 @@ jobs:
           source: "k8s/"
           target: "~/k8s/chapchu-auth"
 
-      - name: Apply k8s secrets
+      - name: Apply k8s secrets and configmaps
         uses: appleboy/ssh-action@v1
         env:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
@@ -47,11 +47,14 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           AUTH_RSA_PRIVATE_KEY: ${{ secrets.AUTH_RSA_PRIVATE_KEY }}
           AUTH_RSA_PUBLIC_KEY: ${{ secrets.AUTH_RSA_PUBLIC_KEY }}
+          REGISTRATION_TOKEN_SECRET: ${{ secrets.REGISTRATION_TOKEN_SECRET }}
+          FRONT_REDIRECT_URI: ${{ vars.FRONT_REDIRECT_URI }}
+          FRONT_ONBOARDING_URI: ${{ vars.FRONT_ONBOARDING_URI }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          envs: GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,DB_URL,DB_USERNAME,DB_PASSWORD,AUTH_RSA_PRIVATE_KEY,AUTH_RSA_PUBLIC_KEY
+          envs: GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,DB_URL,DB_USERNAME,DB_PASSWORD,AUTH_RSA_PRIVATE_KEY,AUTH_RSA_PUBLIC_KEY,REGISTRATION_TOKEN_SECRET,FRONT_REDIRECT_URI,FRONT_ONBOARDING_URI
           script: |
             export KUBECONFIG=/home/ubuntu/.kube/config
             kubectl create secret generic chapchu-auth-secret \
@@ -62,6 +65,14 @@ jobs:
               --from-literal=DB_PASSWORD="$DB_PASSWORD" \
               --from-literal=AUTH_RSA_PRIVATE_KEY="$AUTH_RSA_PRIVATE_KEY" \
               --from-literal=AUTH_RSA_PUBLIC_KEY="$AUTH_RSA_PUBLIC_KEY" \
+              --from-literal=REGISTRATION_TOKEN_SECRET="$REGISTRATION_TOKEN_SECRET" \
+              -n chapchu --dry-run=client -o yaml | kubectl apply -f -
+            kubectl create configmap chapchu-auth-config \
+              --from-literal=AUTH_SERVER_URL="https://auth.chapchu.site" \
+              --from-literal=GOOGLE_REDIRECT_URI="https://auth.chapchu.site/login/oauth2/code/google" \
+              --from-literal=SESSION_COOKIE_SECURE="true" \
+              --from-literal=FRONT_REDIRECT_URI="$FRONT_REDIRECT_URI" \
+              --from-literal=FRONT_ONBOARDING_URI="$FRONT_ONBOARDING_URI" \
               -n chapchu --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy to server
@@ -78,7 +89,8 @@ jobs:
             # 이전 배포로 서버에 남아있을 수 있는 stale 예시 파일 정리.
             rm -f ~/k8s/chapchu-auth/k8s/secret.example.yaml
             kubectl apply -f ~/k8s/chapchu-auth/k8s/namespace.yaml
-            kubectl apply -f ~/k8s/chapchu-auth/k8s/configmap.yaml
+            # configmap은 위 "Apply k8s secrets and configmaps" 스텝에서 kubectl create --dry-run으로 관리.
+            # configmap.yaml은 정적 값만 포함하므로 직접 apply 금지 (GitHub Variables 값을 덮어씀).
             kubectl apply -f ~/k8s/chapchu-auth/k8s/service.yaml
             kubectl apply -f ~/k8s/chapchu-auth/k8s/deployment.yaml
             kubectl rollout restart deployment/chapchu-auth -n chapchu
