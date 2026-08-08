@@ -40,6 +40,15 @@ chapchu-auth:
 server:
   port: 9000
   forward-headers-strategy: FRAMEWORK
+  servlet:
+    session:
+      cookie:
+        # Cloudflare가 TLS를 종료하고 origin 구간은 평문이라, Tomcat은 요청을 http로 보고
+        # Secure를 붙이지 않는다. 브라우저-Cloudflare 구간은 HTTPS이므로 운영에서는 켜야 한다.
+        # 로컬(http)에서 켜면 쿠키가 전송되지 않아 로그인이 되지 않으므로 기본값은 false다.
+        secure: ${SESSION_COOKIE_SECURE:false}
+        # OAuth 콜백은 최상위 GET 이동이라 Lax로도 쿠키가 전달된다. Strict는 흐름을 깨뜨린다.
+        same-site: lax
 
 management:
   endpoints:
