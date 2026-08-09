@@ -19,7 +19,7 @@ public class OnboardingAuthenticationFailureHandler implements AuthenticationFai
 
   public OnboardingAuthenticationFailureHandler(
       @Value("${chapchu-auth.client.front-onboarding-uri}") String frontOnboardingUri) {
-    this.frontOnboardingUri = frontOnboardingUri;
+    this.frontOnboardingUri = frontOnboardingUri.split(",")[0].trim();
   }
 
   @Override
