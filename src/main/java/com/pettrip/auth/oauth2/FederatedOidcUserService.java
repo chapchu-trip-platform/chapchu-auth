@@ -42,7 +42,9 @@ public class FederatedOidcUserService extends OidcUserService {
     String email = oidcUser.getEmail();
 
     Optional<AuthUser> existing = authUserService.findByGoogleUserId(googleUserId);
-    if (existing.isEmpty()) {
+    if (existing.isEmpty()
+        || existing.get().getNickname() == null
+        || existing.get().getNickname().isBlank()) {
       String token = registrationTokenService.createToken(googleUserId, email);
       throw new NewUserRequiresOnboardingException(token);
     }
