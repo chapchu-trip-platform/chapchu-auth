@@ -33,7 +33,6 @@ chapchu-auth:
   issuer-uri: ${AUTH_SERVER_URL}
   client:
     front-redirect-uri: ${FRONT_REDIRECT_URI:http://localhost:3000/login/callback}
-    front-onboarding-uri: ${FRONT_ONBOARDING_URI:http://localhost:3000/onboarding}
   registration-token:
     secret: ${REGISTRATION_TOKEN_SECRET:}
   jwt:

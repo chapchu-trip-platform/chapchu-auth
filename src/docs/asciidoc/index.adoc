@@ -20,38 +20,49 @@ PetTrip 인증 서버(chapchu-auth) 명세입니다.
 [[flow]]
 == 로그인 및 회원등록 흐름
 
-별도의 회원가입 API는 없습니다. **처음 로그인하는 구글 계정은 그 자리에서 자동으로 회원등록됩니다.**
+=== 기존 회원 로그인
 
 ....
 [프론트]                    [chapchu-auth]                 [Google]        [chapchu-api]
    |                              |                            |                 |
    |-- 1. /oauth2/authorize ----->|                            |                 |
+   |                              |--- 2. 구글 인증 화면 ------>|                 |
+   |                              |<--- 3. 인증 성공 -----------|                 |
+   |                              |    (DB 조회 → 기존 회원)    |                 |
+   |<---- 4. 302 redirect_uri?code=xxx ---|                    |                 |
    |                              |                            |                 |
-   |<----- 2. 302 /login ---------|                            |                 |
+   |-- 5. /oauth2/token --------->|                            |                 |
+   |<---- 6. access_token --------|                            |                 |
    |                              |                            |                 |
-   |-- 3. 구글 로그인 선택 ------->|--- 4. 구글 인증 화면 ------>|                 |
-   |                              |                            |                 |
-   |                              |<--- 5. 인증 성공 -----------|                 |
-   |                              |                            |                 |
-   |                    6. users 테이블 get-or-create           |                 |
-   |                       (없으면 이 시점에 회원등록)           |                 |
-   |                              |                            |                 |
-   |<---- 7. 302 콜백 (code) -----|                            |                 |
-   |                              |                            |                 |
-   |-- 8. /oauth2/token --------->|                            |                 |
-   |<---- 9. access_token --------|                            |                 |
-   |                              |                            |                 |
-   |-- 10. Authorization: Bearer {access_token} -------------------------------->|
+   |-- 7. Authorization: Bearer {access_token} --------------------------------->|
+....
+
+=== 신규 회원 온보딩
+
+....
+[프론트]                    [chapchu-auth]                 [Google]
+   |                              |                            |
+   |-- 1. /oauth2/authorize ----->|                            |
+   |                              |--- 2. 구글 인증 화면 ------>|
+   |                              |<--- 3. 인증 성공 -----------|
+   |                              |    (DB 조회 → 신규 회원)    |
+   |<-- 4. 302 redirect_uri?registration_token=xxx ---|        |
+   |                              |                            |
+   |    (닉네임 입력 화면 표시)    |                            |
+   |                              |                            |
+   |-- 5. POST /auth/register {registrationToken, nickname} -->|
+   |<---- 6. 200 OK --------------|                            |
+   |                              |                            |
+   |    → 1번부터 다시 시작 (이번엔 기존 회원으로 처리됨)        |
 ....
 
 [NOTE]
 ====
-6번의 자동 회원등록은 `FederatedOidcUserService` -> `AuthUserService.findOrCreate(googleUserId, email)`가 수행합니다.
-구글 `sub`으로 기존 회원을 찾고, 없으면 `users`에 새 행을 만듭니다 (`role=USER`, `account_status=ACTIVE`).
+4번에서 `registration_token`이 전달되는 주소는 **FE가 1번에서 보낸 `redirect_uri`와 동일**합니다.
+별도의 온보딩 전용 URI를 서버에 등록할 필요가 없으며, FE는 콜백에서 `registration_token` 파라미터가 있으면
+온보딩 화면으로 분기하면 됩니다.
 
-이때 **`nickname`은 비어 있습니다.** 프론트는 로그인 직후 `GET /users/me`(chapchu-api)로 `nickname`이 `null`인지 확인하고,
-`null`이면 닉네임 입력 화면으로 보내 `POST /users/me`를 호출해야 합니다.
-중복 여부는 `GET /users/nickname/availability`로 미리 확인할 수 있습니다.
+`registration_token`은 서명된 단기 토큰(HMAC)으로 `/auth/register` 전용입니다.
 ====
 
 === chapchu-api와의 계약
