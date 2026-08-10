@@ -25,42 +25,48 @@ class RegisteredClientRedirectUriTest {
   @ExtendWith(SpringExtension.class)
   @SpringBootTest
   @TestPropertySource(
-      properties =
-          "chapchu-auth.client.front-redirect-uri="
-              + "http://localhost:3000/login/callback, https://chapchu.site/login/callback")
+      properties = {
+        "chapchu-auth.client.front-redirect-uri="
+            + "http://localhost:8080/auth/callback, https://api.chapchu.site/auth/callback",
+        "chapchu-auth.client.api-client-secret=test-secret"
+      })
   class 여러_개_등록 {
 
     @Autowired private RegisteredClientRepository registeredClientRepository;
 
     @Test
     void 쉼표로_구분한_콜백_URL이_모두_등록된다() {
-      RegisteredClient client = registeredClientRepository.findByClientId("chapchu-front");
+      RegisteredClient client = registeredClientRepository.findByClientId("chapchu-api");
 
       assertThat(client).isNotNull();
       assertThat(client.getRedirectUris())
           .containsExactlyInAnyOrder(
-              "http://localhost:3000/login/callback", "https://chapchu.site/login/callback");
+              "http://localhost:8080/auth/callback", "https://api.chapchu.site/auth/callback");
     }
   }
 
   @Nested
   @ExtendWith(SpringExtension.class)
   @SpringBootTest
+  @TestPropertySource(
+      properties = "chapchu-auth.client.api-client-secret=test-secret")
   class 한_개만_등록 {
 
     @Autowired private RegisteredClientRepository registeredClientRepository;
 
     @Test
     void 콜백_URL이_하나면_그대로_등록된다() {
-      RegisteredClient client = registeredClientRepository.findByClientId("chapchu-front");
+      RegisteredClient client = registeredClientRepository.findByClientId("chapchu-api");
 
-      assertThat(client.getRedirectUris()).containsExactly("http://localhost:3000/login/callback");
+      assertThat(client.getRedirectUris())
+          .containsExactly("http://localhost:3000/login/callback");
     }
   }
 
   @Test
   void 콜백_URL이_비어_있으면_기동에_실패한다() {
-    assertThatThrownBy(() -> new AuthorizationServerConfig().registeredClientRepository("  ,  "))
+    assertThatThrownBy(
+            () -> new AuthorizationServerConfig().registeredClientRepository("  ,  ", "test-secret"))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("최소 한 개의 콜백 URL");
   }
