@@ -22,10 +22,8 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 class CloudflareForwardedSchemeFilterTest {
 
   private static final String AUTHORIZE =
-      "/oauth2/authorize?response_type=code&client_id=chapchu-front&scope=openid&state=s"
-          + "&redirect_uri=http://localhost:3000/login/callback"
-          + "&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"
-          + "&code_challenge_method=S256";
+      "/oauth2/authorize?response_type=code&client_id=chapchu-api&scope=openid&state=s"
+          + "&redirect_uri=http://localhost:8080/auth/callback";
 
   @LocalServerPort private int port;
 
