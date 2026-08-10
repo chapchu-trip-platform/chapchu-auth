@@ -52,7 +52,7 @@ public class AuthorizationServerConfig {
     http.exceptionHandling(
         exceptions ->
             exceptions.defaultAuthenticationEntryPointFor(
-                new LoginUrlAuthenticationEntryPoint("/login"),
+                new LoginUrlAuthenticationEntryPoint("/oauth2/authorization/google"),
                 new MediaTypeRequestMatcher(MediaType.TEXT_HTML)));
 
     http.cors(cors -> cors.configurationSource(authServerCorsSource(frontRedirectUris)));
