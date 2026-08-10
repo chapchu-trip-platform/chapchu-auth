@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class OnboardingAuthenticationFailureHandler implements AuthenticationFailureHandler {
 
-  private static final String CLIENT_ID = "chapchu-front";
+  private static final String CLIENT_ID = "chapchu-api";
 
   private final RegisteredClientRepository registeredClientRepository;
   private final RequestCache requestCache = new HttpSessionRequestCache();
