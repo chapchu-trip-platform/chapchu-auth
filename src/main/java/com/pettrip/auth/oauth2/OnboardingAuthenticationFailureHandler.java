@@ -39,7 +39,8 @@ public class OnboardingAuthenticationFailureHandler implements AuthenticationFai
         fallback.onAuthenticationFailure(request, response, exception);
         return;
       }
-      response.sendRedirect(redirectUri + "?registration_token=" + onboardingEx.getRegistrationToken());
+      response.sendRedirect(
+          redirectUri + "?registration_token=" + onboardingEx.getRegistrationToken());
       return;
     }
     fallback.onAuthenticationFailure(request, response, exception);

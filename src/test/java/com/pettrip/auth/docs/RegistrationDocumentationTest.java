@@ -33,12 +33,10 @@ class RegistrationDocumentationTest {
     String token =
         registrationTokenService.createToken("google-doc-test-user-001", "doc-test@example.com");
     String body =
-        objectMapper.writeValueAsString(
-            Map.of("registrationToken", token, "nickname", "햇살여행자"));
+        objectMapper.writeValueAsString(Map.of("registrationToken", token, "nickname", "햇살여행자"));
 
     mockMvc
-        .perform(
-            post("/auth/register").contentType(MediaType.APPLICATION_JSON).content(body))
+        .perform(post("/auth/register").contentType(MediaType.APPLICATION_JSON).content(body))
         .andExpect(status().isOk())
         .andDo(
             document(
