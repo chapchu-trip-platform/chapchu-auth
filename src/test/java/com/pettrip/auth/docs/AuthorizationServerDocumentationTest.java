@@ -82,9 +82,9 @@ class AuthorizationServerDocumentationTest {
   }
 
   @Test
-  void 미인증_접근시_구글_로그인으로_리다이렉트된다() throws Exception {
+  void 보호된_리소스_미인증_접근시_구글_로그인으로_리다이렉트된다() throws Exception {
     mockMvc
-        .perform(get("/login"))
+        .perform(get("/some-protected-resource"))
         .andExpect(status().is3xxRedirection())
         .andExpect(
             result ->
