@@ -82,7 +82,14 @@ class AuthorizationServerDocumentationTest {
   }
 
   @Test
-  void 로그인_페이지는_구글_로그인_링크를_제공한다() throws Exception {
-    mockMvc.perform(get("/login")).andExpect(status().isOk()).andDo(document("login-page"));
+  void 미인증_접근시_구글_로그인으로_리다이렉트된다() throws Exception {
+    mockMvc
+        .perform(get("/login"))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(
+            result ->
+                assertThat(result.getResponse().getRedirectedUrl())
+                    .contains("/oauth2/authorization/google"))
+        .andDo(document("login-page"));
   }
 }
