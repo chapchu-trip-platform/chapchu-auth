@@ -53,7 +53,7 @@ class AuthorizationServerDocumentationTest {
   }
 
   @Test
-  void 미인증_인가요청은_로그인_페이지로_리다이렉트된다() throws Exception {
+  void 미인증_인가요청은_구글_로그인으로_리다이렉트된다() throws Exception {
     mockMvc
         .perform(
             get("/oauth2/authorize")
@@ -65,7 +65,7 @@ class AuthorizationServerDocumentationTest {
                 .queryParam("code_challenge", "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM")
                 .queryParam("code_challenge_method", "S256"))
         .andExpect(status().is3xxRedirection())
-        .andExpect(result -> assertThat(result.getResponse().getRedirectedUrl()).endsWith("/login"))
+        .andExpect(result -> assertThat(result.getResponse().getRedirectedUrl()).contains("/oauth2/authorization/google"))
         .andDo(
             document(
                 "oauth2-authorize",
