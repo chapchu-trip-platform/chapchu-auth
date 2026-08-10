@@ -18,7 +18,8 @@ spring:
 chapchu-auth:
   issuer-uri: http://localhost:9000
   client:
-    front-redirect-uri: http://localhost:3000/login/callback
+    front-redirect-uri: http://localhost:8080/auth/callback
+    api-client-secret: test-api-client-secret
   registration-token:
     secret: test-secret-key-for-unit-tests-only
   jwt:

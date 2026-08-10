@@ -59,7 +59,7 @@ class RegisteredClientRedirectUriTest {
       RegisteredClient client = registeredClientRepository.findByClientId("chapchu-api");
 
       assertThat(client.getRedirectUris())
-          .containsExactly("http://localhost:3000/login/callback");
+          .containsExactly("http://localhost:8080/auth/callback");
     }
   }
 

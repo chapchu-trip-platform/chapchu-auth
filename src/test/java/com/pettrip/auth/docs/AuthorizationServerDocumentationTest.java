@@ -18,8 +18,8 @@ import org.springframework.test.web.servlet.MockMvc;
 /**
  * 인증 서버의 공개 엔드포인트를 REST Docs 스니펫으로 남긴다.
  *
- * <p>로그인/회원등록은 브라우저 리다이렉트 기반 OAuth2 표준 흐름이라 단일 REST 호출로 문서화되지 않는다. 그래서 흐름을 구성하는 각 엔드포인트를 개별적으로
- * 문서화하고, 이들을 어떤 순서로 호출하는지는 {@code src/docs/asciidoc/index.adoc}에서 설명한다.
+ * <p>BFF 전환 이후 FE는 chapchu-auth를 직접 호출하지 않는다. chapchu-api가 OAuth2 Client로서 인가 흐름 전체를 처리한다.
+ * 이 테스트는 chapchu-auth의 공개 엔드포인트(OIDC 디스커버리, JWKS)와 chapchu-api가 내부적으로 사용하는 인가 엔드포인트를 문서화한다.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -38,7 +38,6 @@ class AuthorizationServerDocumentationTest {
         .perform(get("/.well-known/openid-configuration"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.issuer").value("http://localhost:9000"))
-        .andExpect(jsonPath("$.code_challenge_methods_supported[0]").value("S256"))
         .andDo(document("oidc-discovery"));
   }
 
@@ -58,12 +57,10 @@ class AuthorizationServerDocumentationTest {
         .perform(
             get("/oauth2/authorize")
                 .queryParam("response_type", "code")
-                .queryParam("client_id", "chapchu-front")
-                .queryParam("redirect_uri", "http://localhost:3000/login/callback")
+                .queryParam("client_id", "chapchu-api")
+                .queryParam("redirect_uri", "http://localhost:8080/auth/callback")
                 .queryParam("scope", "openid profile email")
-                .queryParam("state", "front-generated-state")
-                .queryParam("code_challenge", "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM")
-                .queryParam("code_challenge_method", "S256"))
+                .queryParam("state", "server-generated-state"))
         .andExpect(status().is3xxRedirection())
         .andExpect(
             result ->
@@ -74,14 +71,11 @@ class AuthorizationServerDocumentationTest {
                 "oauth2-authorize",
                 queryParameters(
                     parameterWithName("response_type").description("`code` 고정"),
-                    parameterWithName("client_id").description("`chapchu-front` 고정"),
+                    parameterWithName("client_id").description("`chapchu-api` 고정. chapchu-api가 Confidential Client로 등록되어 있다"),
                     parameterWithName("redirect_uri")
-                        .description("인가 코드를 받을 프론트 콜백 URL. 서버에 등록된 값과 정확히 일치해야 한다"),
+                        .description("chapchu-api의 콜백 엔드포인트. 서버에 등록된 값과 정확히 일치해야 한다"),
                     parameterWithName("scope").description("`openid profile email`"),
-                    parameterWithName("state").description("CSRF 방지용 난수. 콜백에서 그대로 되돌려준다"),
-                    parameterWithName("code_challenge")
-                        .description("PKCE 챌린지. `BASE64URL(SHA256(code_verifier))`"),
-                    parameterWithName("code_challenge_method").description("`S256` 고정"))));
+                    parameterWithName("state").description("CSRF 방지용 난수. chapchu-api가 생성하여 쿠키에 저장한다"))));
   }
 
   @Test
