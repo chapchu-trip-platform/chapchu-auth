@@ -49,12 +49,13 @@ jobs:
           AUTH_RSA_PRIVATE_KEY: ${{ secrets.AUTH_RSA_PRIVATE_KEY }}
           AUTH_RSA_PUBLIC_KEY: ${{ secrets.AUTH_RSA_PUBLIC_KEY }}
           REGISTRATION_TOKEN_SECRET: ${{ secrets.REGISTRATION_TOKEN_SECRET }}
+          CHAPCHU_API_CLIENT_SECRET: ${{ secrets.CHAPCHU_API_CLIENT_SECRET }}
           FRONT_REDIRECT_URI: ${{ vars.FRONT_REDIRECT_URI }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          envs: GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,DB_URL,DB_USERNAME,DB_PASSWORD,AUTH_RSA_PRIVATE_KEY,AUTH_RSA_PUBLIC_KEY,REGISTRATION_TOKEN_SECRET,FRONT_REDIRECT_URI
+          envs: GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,DB_URL,DB_USERNAME,DB_PASSWORD,AUTH_RSA_PRIVATE_KEY,AUTH_RSA_PUBLIC_KEY,REGISTRATION_TOKEN_SECRET,CHAPCHU_API_CLIENT_SECRET,FRONT_REDIRECT_URI
           script: |
             export KUBECONFIG=/home/ubuntu/.kube/config
             kubectl create secret generic chapchu-auth-secret \
@@ -66,6 +67,7 @@ jobs:
               --from-literal=AUTH_RSA_PRIVATE_KEY="$AUTH_RSA_PRIVATE_KEY" \
               --from-literal=AUTH_RSA_PUBLIC_KEY="$AUTH_RSA_PUBLIC_KEY" \
               --from-literal=REGISTRATION_TOKEN_SECRET="$REGISTRATION_TOKEN_SECRET" \
+              --from-literal=CHAPCHU_API_CLIENT_SECRET="$CHAPCHU_API_CLIENT_SECRET" \
               -n chapchu --dry-run=client -o yaml | kubectl apply -f -
             kubectl create configmap chapchu-auth-config \
               --from-literal=AUTH_SERVER_URL="https://auth.chapchu.site" \

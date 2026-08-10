@@ -32,7 +32,8 @@ spring:
 chapchu-auth:
   issuer-uri: ${AUTH_SERVER_URL}
   client:
-    front-redirect-uri: ${FRONT_REDIRECT_URI:http://localhost:3000/login/callback}
+    front-redirect-uri: ${FRONT_REDIRECT_URI:http://localhost:8080/auth/callback}
+    api-client-secret: ${CHAPCHU_API_CLIENT_SECRET}
   registration-token:
     secret: ${REGISTRATION_TOKEN_SECRET:}
   jwt:

@@ -93,18 +93,20 @@ public class AuthorizationServerConfig {
   }
 
   /**
-   * 프론트 콜백 URL은 쉼표로 구분해 여러 개 등록할 수 있다 (로컬 개발 주소 + 배포 주소 동시 운용).
+   * chapchu-api가 Confidential Client로서 OAuth2 인가 코드 교환을 담당한다 (BFF 패턴).
    *
    * <p>등록되지 않은 {@code redirect_uri}로 인가 요청이 오면 <b>에러 없이</b> 구글 로그인으로 넘어간 뒤 아무 데도 도달하지 못한다. 원인을 알려주는
    * 메시지가 없어 디버깅이 매우 어려우므로, 사용할 콜백 주소는 빠짐없이 등록해 두어야 한다.
    */
   @Bean
   public RegisteredClientRepository registeredClientRepository(
-      @Value("${chapchu-auth.client.front-redirect-uri}") String frontRedirectUris) {
-    RegisteredClient.Builder frontClientBuilder =
+      @Value("${chapchu-auth.client.front-redirect-uri}") String redirectUris,
+      @Value("${chapchu-auth.client.api-client-secret}") String apiClientSecret) {
+    RegisteredClient.Builder apiClientBuilder =
         RegisteredClient.withId(UUID.randomUUID().toString())
-            .clientId("chapchu-front")
-            .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+            .clientId("chapchu-api")
+            .clientSecret("{noop}" + apiClientSecret)
+            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
             .scope(OidcScopes.OPENID)
@@ -113,7 +115,7 @@ public class AuthorizationServerConfig {
             .clientSettings(
                 ClientSettings.builder()
                     .requireAuthorizationConsent(false)
-                    .requireProofKey(true)
+                    .requireProofKey(false)
                     .build())
             .tokenSettings(
                 TokenSettings.builder()
@@ -122,9 +124,9 @@ public class AuthorizationServerConfig {
                     .reuseRefreshTokens(false)
                     .build());
 
-    parseRedirectUris(frontRedirectUris).forEach(frontClientBuilder::redirectUri);
+    parseRedirectUris(redirectUris).forEach(apiClientBuilder::redirectUri);
 
-    return new InMemoryRegisteredClientRepository(frontClientBuilder.build());
+    return new InMemoryRegisteredClientRepository(apiClientBuilder.build());
   }
 
   private static List<String> parseRedirectUris(String value) {
