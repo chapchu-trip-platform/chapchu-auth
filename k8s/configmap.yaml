@@ -10,3 +10,5 @@ data:
   SESSION_COOKIE_SECURE: "true"
   # FRONT_REDIRECT_URI, FRONT_ONBOARDING_URI는 GitHub Variables로 관리한다.
   # chapchu-auth 레포 → Settings → Variables에서 변경하면 다음 배포 시 자동 반영된다.
+  FE_REDIRECT_URL: "https://{FE도메인}/auth/oauth"
+  CORS_ALLOWED_ORIGINS: "https://{FE도메인},http://localhost:3000"
