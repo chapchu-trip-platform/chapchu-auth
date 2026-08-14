@@ -45,7 +45,8 @@ class AuthUserServiceTest {
   @Test
   @DisplayName("createWithNickname은 닉네임을 포함한 새 유저를 저장한다")
   void createsNewUserWithNickname() {
-    when(authUserRepository.save(any(AuthUser.class)))
+    // saveAndFlush 를 쓴다. UNIQUE 위반을 이 호출 안에서 터뜨려야 409로 바꿀 수 있기 때문이다.
+    when(authUserRepository.saveAndFlush(any(AuthUser.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     AuthUserService service = new AuthUserService(authUserRepository);

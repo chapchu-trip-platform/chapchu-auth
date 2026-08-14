@@ -73,8 +73,7 @@ class TokenEndpointDocumentationTest {
     saveAuthorizationCode();
 
     String basicAuth =
-        Base64.getEncoder()
-            .encodeToString((CLIENT_ID + ":" + CLIENT_SECRET).getBytes());
+        Base64.getEncoder().encodeToString((CLIENT_ID + ":" + CLIENT_SECRET).getBytes());
 
     MvcResult result =
         mockMvc

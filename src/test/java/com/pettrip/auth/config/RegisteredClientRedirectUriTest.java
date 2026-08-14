@@ -48,8 +48,7 @@ class RegisteredClientRedirectUriTest {
   @Nested
   @ExtendWith(SpringExtension.class)
   @SpringBootTest
-  @TestPropertySource(
-      properties = "chapchu-auth.client.api-client-secret=test-secret")
+  @TestPropertySource(properties = "chapchu-auth.client.api-client-secret=test-secret")
   class 한_개만_등록 {
 
     @Autowired private RegisteredClientRepository registeredClientRepository;
@@ -58,15 +57,15 @@ class RegisteredClientRedirectUriTest {
     void 콜백_URL이_하나면_그대로_등록된다() {
       RegisteredClient client = registeredClientRepository.findByClientId("chapchu-api");
 
-      assertThat(client.getRedirectUris())
-          .containsExactly("http://localhost:8080/auth/callback");
+      assertThat(client.getRedirectUris()).containsExactly("http://localhost:8080/auth/callback");
     }
   }
 
   @Test
   void 콜백_URL이_비어_있으면_기동에_실패한다() {
     assertThatThrownBy(
-            () -> new AuthorizationServerConfig().registeredClientRepository("  ,  ", "test-secret"))
+            () ->
+                new AuthorizationServerConfig().registeredClientRepository("  ,  ", "test-secret"))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("최소 한 개의 콜백 URL");
   }
