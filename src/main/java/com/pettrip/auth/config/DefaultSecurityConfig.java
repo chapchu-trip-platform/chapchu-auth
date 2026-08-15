@@ -36,12 +36,18 @@ public class DefaultSecurityConfig {
                 auth.dispatcherTypeMatchers(DispatcherType.ERROR, DispatcherType.FORWARD)
                     .permitAll()
                     .requestMatchers(
-                        "/actuator/health", "/actuator/health/**", "/docs/**", "/auth/register")
+                        "/actuator/health",
+                        "/actuator/health/**",
+                        "/docs/**",
+                        "/auth/register",
+                        "/auth/registration-token/verify")
                     .permitAll()
                     .anyRequest()
                     .authenticated())
         .cors(Customizer.withDefaults())
-        .csrf(csrf -> csrf.ignoringRequestMatchers("/auth/register"))
+        .csrf(
+            csrf ->
+                csrf.ignoringRequestMatchers("/auth/register", "/auth/registration-token/verify"))
         .exceptionHandling(
             ex ->
                 ex.authenticationEntryPoint(
