@@ -18,6 +18,9 @@ import org.springframework.stereotype.Service;
  *
  * <p>신규 유저(DB에 없는 google_user_id)라면 {@link NewUserRequiresOnboardingException}을 던져 온보딩 플로우로 분기한다.
  * {@link OnboardingAuthenticationFailureHandler}가 이를 받아 FE 온보딩 페이지로 리다이렉트한다.
+ *
+ * <p>탈퇴한 계정이면 {@link WithdrawnAccountException}을 던져 토큰 발급을 막는다. 이 검사는 인가 코드가 만들어지기 전에 일어나므로 탈퇴자는
+ * 코드조차 받지 못한다.
  */
 @Service
 public class FederatedOidcUserService extends OidcUserService {
@@ -50,6 +53,10 @@ public class FederatedOidcUserService extends OidcUserService {
     }
 
     AuthUser authUser = existing.get();
+    if (authUser.isWithdrawn()) {
+      throw new WithdrawnAccountException();
+    }
+
     Map<String, Object> claims = new LinkedHashMap<>(oidcUser.getClaims());
     claims.put(INTERNAL_USER_ID_CLAIM, authUser.getId().toString());
     claims.put(ROLE_CLAIM, authUser.getRole().name());

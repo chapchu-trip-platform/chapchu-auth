@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,6 +57,29 @@ class AuthUserServiceTest {
     assertThat(result.getEmail()).isEqualTo("new@example.com");
     assertThat(result.getNickname()).isEqualTo("짱구");
     assertThat(result.getRole()).isEqualTo(Role.USER);
-    assertThat(result.getAccountStatus()).isEqualTo(AccountStatus.ACTIVE);
+    assertThat(result.isWithdrawn()).isFalse();
+  }
+
+  @Test
+  @DisplayName("탈퇴한 유저면 isWithdrawn이 true다")
+  void reportsWithdrawn() {
+    AuthUser withdrawn = new AuthUser("bye@example.com", "google-999", "탈퇴자");
+    withdrawn.withdraw();
+    when(authUserRepository.findById(withdrawn.getId())).thenReturn(Optional.of(withdrawn));
+
+    AuthUserService service = new AuthUserService(authUserRepository);
+
+    assertThat(service.isWithdrawn(withdrawn.getId())).isTrue();
+  }
+
+  @Test
+  @DisplayName("없는 유저는 탈퇴로 보지 않는다 — 판정 불가를 차단으로 바꾸지 않는다")
+  void unknownUserIsNotWithdrawn() {
+    UUID unknown = UUID.randomUUID();
+    when(authUserRepository.findById(unknown)).thenReturn(Optional.empty());
+
+    AuthUserService service = new AuthUserService(authUserRepository);
+
+    assertThat(service.isWithdrawn(unknown)).isFalse();
   }
 }
