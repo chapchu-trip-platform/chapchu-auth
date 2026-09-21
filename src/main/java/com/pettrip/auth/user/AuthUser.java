@@ -34,9 +34,9 @@ public class AuthUser {
   @Column(length = 20)
   private Role role;
 
-  @Enumerated(EnumType.STRING)
-  @Column(name = "account_status", length = 20)
-  private AccountStatus accountStatus;
+  /** 탈퇴 여부. true면 토큰을 발급하지 않는다. 컬럼 소유권은 chapchu-api의 Flyway(V38)에 있다. */
+  @Column(name = "is_withdrawn", nullable = false)
+  private boolean isWithdrawn = false;
 
   protected AuthUser() {}
 
@@ -45,7 +45,6 @@ public class AuthUser {
     this.googleUserId = googleUserId;
     this.nickname = nickname;
     this.role = Role.USER;
-    this.accountStatus = AccountStatus.ACTIVE;
   }
 
   public UUID getId() {
@@ -68,7 +67,12 @@ public class AuthUser {
     return nickname;
   }
 
-  public AccountStatus getAccountStatus() {
-    return accountStatus;
+  public boolean isWithdrawn() {
+    return isWithdrawn;
+  }
+
+  /** 테스트·관리 목적의 상태 전이. 실제 탈퇴 처리는 chapchu-api의 {@code PATCH /users/me}가 한다. */
+  public void withdraw() {
+    this.isWithdrawn = true;
   }
 }

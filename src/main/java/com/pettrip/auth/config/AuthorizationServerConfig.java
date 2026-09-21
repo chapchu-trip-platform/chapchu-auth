@@ -1,10 +1,13 @@
 package com.pettrip.auth.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import com.pettrip.auth.oauth2.WithdrawnAccountTokenFilter;
+import com.pettrip.auth.user.AuthUserService;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -31,6 +34,7 @@ import org.springframework.security.oauth2.server.authorization.settings.Authori
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
@@ -44,7 +48,10 @@ public class AuthorizationServerConfig {
   @Order(1)
   public SecurityFilterChain authorizationServerSecurityFilterChain(
       HttpSecurity http,
-      @Value("${chapchu-auth.client.front-redirect-uri}") String frontRedirectUris)
+      @Value("${chapchu-auth.client.front-redirect-uri}") String frontRedirectUris,
+      OAuth2AuthorizationService authorizationService,
+      AuthUserService authUserService,
+      ObjectMapper objectMapper)
       throws Exception {
     OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
     http.getConfigurer(OAuth2AuthorizationServerConfigurer.class).oidc(Customizer.withDefaults());
@@ -56,6 +63,14 @@ public class AuthorizationServerConfig {
                 new MediaTypeRequestMatcher(MediaType.TEXT_HTML)));
 
     http.cors(cors -> cors.configurationSource(authServerCorsSource(frontRedirectUris)));
+
+    // 탈퇴 계정의 refresh_token 재발급 차단.
+    // 기준을 OAuth2TokenEndpointFilter로 두면 안 된다 — 인가서버 컨피규러가 런타임에 꽂는 필터라
+    // 순서 레지스트리에 없어 addFilterBefore가 IllegalArgumentException을 던진다.
+    // AuthorizationFilter는 등록돼 있고 토큰 엔드포인트보다 앞이라 여기서 끊으면 된다.
+    http.addFilterBefore(
+        new WithdrawnAccountTokenFilter(authorizationService, authUserService, objectMapper),
+        AuthorizationFilter.class);
 
     return http.build();
   }

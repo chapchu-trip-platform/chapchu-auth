@@ -1,6 +1,7 @@
 package com.pettrip.auth.user;
 
 import java.util.Optional;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,12 @@ public class AuthUserService {
   @Transactional(readOnly = true)
   public Optional<AuthUser> findByGoogleUserId(String googleUserId) {
     return authUserRepository.findByGoogleUserId(googleUserId);
+  }
+
+  /** 없는 사용자는 false로 본다. 판정 불가를 차단으로 바꾸면 버그 하나가 전체 재발급을 잠근다. */
+  @Transactional(readOnly = true)
+  public boolean isWithdrawn(UUID userId) {
+    return authUserRepository.findById(userId).map(AuthUser::isWithdrawn).orElse(false);
   }
 
   /**
